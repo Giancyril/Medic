@@ -1,4 +1,4 @@
-﻿
+﻿import { AlertOctagon, CheckCircle2 } from "lucide-react";
 import type { Incident } from "../types/incident";
 import { timeAgo, getSeverityClass, getStatusClass, getSeverityDot } from "../utils";
 
@@ -31,38 +31,48 @@ function sortIncidents(list: Incident[]): Incident[] {
 
 export function IncidentList({ incidents, selectedId, onSelect }: Props) {
   const sorted = sortIncidents(incidents);
-  const active = sorted.filter(i => i.status !== "RESOLVED");
-  const resolved = sorted.filter(i => i.status === "RESOLVED");
+  const active = sorted.filter((i) => i.status !== "RESOLVED");
+  const resolved = sorted.filter((i) => i.status === "RESOLVED");
 
   return (
     <>
       <div className="incident-list-header">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Active Incidents
+        <AlertOctagon size={13} strokeWidth={2.2} />
+        <span>Active Incidents</span>
         <span className="count">{active.length}</span>
       </div>
 
       {active.length === 0 && (
         <div className="empty-state" style={{ padding: "40px 24px" }}>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <CheckCircle2 size={32} strokeWidth={1.5} style={{ opacity: 0.35, color: "var(--color-success)" }} />
           <h3>All Clear</h3>
-          <p>No active incidents. Use the Chaos Lab to fire test alerts.</p>
+          <p>No active incidents. Use the Chaos Simulator above to fire test alerts.</p>
         </div>
       )}
 
       {active.map((inc) => (
-        <IncidentItem key={inc.id} incident={inc} active={selectedId === inc.id} onClick={() => onSelect(inc.id)} />
+        <IncidentItem
+          key={inc.id}
+          incident={inc}
+          active={selectedId === inc.id}
+          onClick={() => onSelect(inc.id)}
+        />
       ))}
 
       {resolved.length > 0 && (
         <>
           <div className="incident-list-header" style={{ marginTop: "4px" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Resolved
+            <CheckCircle2 size={13} strokeWidth={2} style={{ color: "var(--color-success)" }} />
+            <span>Resolved</span>
             <span className="count">{resolved.length}</span>
           </div>
           {resolved.map((inc) => (
-            <IncidentItem key={inc.id} incident={inc} active={selectedId === inc.id} onClick={() => onSelect(inc.id)} />
+            <IncidentItem
+              key={inc.id}
+              incident={inc}
+              active={selectedId === inc.id}
+              onClick={() => onSelect(inc.id)}
+            />
           ))}
         </>
       )}
@@ -70,18 +80,46 @@ export function IncidentList({ incidents, selectedId, onSelect }: Props) {
   );
 }
 
-function IncidentItem({ incident: inc, active, onClick }: { incident: Incident; active: boolean; onClick: () => void }) {
+function IncidentItem({
+  incident: inc,
+  active,
+  onClick,
+}: {
+  incident: Incident;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
-    <div className={`incident-item ${active ? "active" : ""}`} onClick={onClick} id={`incident-item-${inc.id}`}>
+    <div
+      className={`incident-item ${active ? "active" : ""}`}
+      onClick={onClick}
+      id={`incident-item-${inc.id}`}
+    >
       <div className="incident-item-header">
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: getSeverityDot(inc.severity), flexShrink: 0 }} />
-        <span className="incident-item-title" title={inc.title}>{inc.title}</span>
-        <span className={`badge ${getSeverityClass(inc.severity)}`}>{inc.severity}</span>
+        <span
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: getSeverityDot(inc.severity),
+            flexShrink: 0,
+          }}
+        />
+        <span className="incident-item-title" title={inc.title}>
+          {inc.title}
+        </span>
+        <span className={`badge ${getSeverityClass(inc.severity)}`}>
+          {inc.severity}
+        </span>
       </div>
       <div className="incident-item-meta">
         <span className="incident-item-service">{inc.service}</span>
-        <span className={`badge ${getStatusClass(inc.status)}`} style={{ fontSize: "10px" }}>{inc.status.replace(/_/g, " ")}</span>
-        <span className="firing-count" style={{ marginLeft: "auto" }}>{inc.firing_count}× · {timeAgo(inc.last_seen_at)}</span>
+        <span className={`badge ${getStatusClass(inc.status)}`} style={{ fontSize: "9px" }}>
+          {inc.status.replace(/_/g, " ")}
+        </span>
+        <span style={{ marginLeft: "auto", color: "var(--text-muted)", fontSize: "11px" }}>
+          {inc.firing_count}× · {timeAgo(inc.last_seen_at)}
+        </span>
       </div>
     </div>
   );

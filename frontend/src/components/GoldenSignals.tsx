@@ -1,4 +1,5 @@
 ﻿import { useRef, useEffect } from "react";
+import { Activity, Clock, ArrowUpRight } from "lucide-react";
 import type { GoldenSignalsData, SignalTimeline } from "../types/incident";
 
 interface Props {
@@ -11,7 +12,7 @@ function getValueClass(val: number, warn: number, crit: number): string {
   return "ok";
 }
 
-function Sparkline({ data, color, height = 44 }: { data: number[]; color: string; height?: number }) {
+function Sparkline({ data, color, height = 40 }: { data: number[]; color: string; height?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -28,14 +29,14 @@ function Sparkline({ data, color, height = 44 }: { data: number[]; color: string
 
     ctx.clearRect(0, 0, w, h);
 
-    // gradient fill
+    // Gradient fill
     const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, color + "44");
+    grad.addColorStop(0, color + "33");
     grad.addColorStop(1, color + "00");
 
     const pts = data.map((v, i) => ({
       x: (i / (data.length - 1)) * w,
-      y: h - ((v - min) / range) * (h - 4) - 2,
+      y: h - ((v - min) / range) * (h - 6) - 3,
     }));
 
     ctx.beginPath();
@@ -50,7 +51,7 @@ function Sparkline({ data, color, height = 44 }: { data: number[]; color: string
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // line
+    // Line stroke
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) {
@@ -58,14 +59,14 @@ function Sparkline({ data, color, height = 44 }: { data: number[]; color: string
       ctx.bezierCurveTo(cpx, pts[i - 1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
     }
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.75;
     ctx.stroke();
   }, [data, color, height]);
 
   return (
     <canvas
       ref={canvasRef}
-      width={180}
+      width={200}
       height={height}
       style={{ width: "100%", height: `${height}px`, display: "block" }}
     />
@@ -86,9 +87,9 @@ function MultiSparkline({ timeline }: { timeline: SignalTimeline }) {
     ctx.clearRect(0, 0, w, h);
 
     const series = [
-      { data: timeline.error_rate,       color: "#ff4757", label: "Error %" },
-      { data: timeline.latency_p99,      color: "#f59e0b", label: "P99 ms" },
-      { data: timeline.memory_saturation, color: "#8b5cf6", label: "Mem %" },
+      { data: timeline.error_rate, color: "#ef4444" },
+      { data: timeline.latency_p99, color: "#f59e0b" },
+      { data: timeline.memory_saturation, color: "#8b5cf6" },
     ];
 
     series.forEach(({ data, color }) => {
@@ -98,7 +99,7 @@ function MultiSparkline({ timeline }: { timeline: SignalTimeline }) {
       const range = max - min || 1;
       const pts = data.map((v, i) => ({
         x: (i / (data.length - 1)) * w,
-        y: h - ((v - min) / range) * (h - 8) - 4,
+        y: h - ((v - min) / range) * (h - 10) - 5,
       }));
 
       ctx.beginPath();
@@ -108,7 +109,7 @@ function MultiSparkline({ timeline }: { timeline: SignalTimeline }) {
         ctx.bezierCurveTo(cpx, pts[i - 1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
       }
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.75;
       ctx.stroke();
     });
   }, [timeline]);
@@ -117,8 +118,8 @@ function MultiSparkline({ timeline }: { timeline: SignalTimeline }) {
     <canvas
       ref={canvasRef}
       width={600}
-      height={80}
-      style={{ width: "100%", height: "80px", display: "block" }}
+      height={76}
+      style={{ width: "100%", height: "76px", display: "block" }}
     />
   );
 }
@@ -129,69 +130,82 @@ export function GoldenSignals({ data }: Props) {
   return (
     <div className="card">
       <div className="card-title">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Golden Signals — {data.service}/{data.namespace}
+        <Activity size={14} strokeWidth={2} style={{ color: "var(--accent-primary)" }} />
+        <span>Golden Signals Telemetry — {data.service}/{data.namespace}</span>
       </div>
 
       <div className="signal-grid">
         <div className="signal-card">
-          <div className="signal-label">Request Rate</div>
-          <div className="signal-value ok">{s.request_rate_rps.toFixed(1)}<span style={{ fontSize: "12px", fontWeight: 400, marginLeft: "3px" }}>rps</span></div>
-          <Sparkline data={[s.request_rate_rps * 0.8, s.request_rate_rps * 0.9, s.request_rate_rps * 1.1, s.request_rate_rps]} color="#10b981" />
+          <div className="signal-label">Throughput</div>
+          <div className="signal-value ok">
+            {s.request_rate_rps.toFixed(1)}
+            <span style={{ fontSize: "11px", fontWeight: 400, marginLeft: "4px", color: "var(--text-muted)" }}>rps</span>
+          </div>
+          <Sparkline data={[s.request_rate_rps * 0.85, s.request_rate_rps * 0.95, s.request_rate_rps * 1.05, s.request_rate_rps]} color="#10b981" />
         </div>
 
         <div className="signal-card">
           <div className="signal-label">Error Rate</div>
           <div className={`signal-value ${getValueClass(s.error_rate_pct, 5, 15)}`}>
-            {s.error_rate_pct.toFixed(1)}<span style={{ fontSize: "12px", fontWeight: 400, marginLeft: "3px" }}>%</span>
+            {s.error_rate_pct.toFixed(1)}
+            <span style={{ fontSize: "11px", fontWeight: 400, marginLeft: "4px", color: "var(--text-muted)" }}>%</span>
           </div>
-          <Sparkline data={data.timeline.error_rate} color="#ff4757" />
+          <Sparkline data={data.timeline.error_rate} color="#ef4444" />
         </div>
 
         <div className="signal-card">
           <div className="signal-label">Latency P99</div>
           <div className={`signal-value ${getValueClass(s.latency_p99_ms, 500, 1000)}`}>
-            {s.latency_p99_ms}<span style={{ fontSize: "12px", fontWeight: 400, marginLeft: "3px" }}>ms</span>
+            {s.latency_p99_ms}
+            <span style={{ fontSize: "11px", fontWeight: 400, marginLeft: "4px", color: "var(--text-muted)" }}>ms</span>
           </div>
           <Sparkline data={data.timeline.latency_p99} color="#f59e0b" />
           <div className="signal-sub">P50: {s.latency_p50_ms}ms · P95: {s.latency_p95_ms}ms</div>
         </div>
 
         <div className="signal-card">
-          <div className="signal-label">Memory</div>
+          <div className="signal-label">Saturation</div>
           <div className={`signal-value ${getValueClass(s.memory_saturation_pct, 75, 90)}`}>
-            {s.memory_saturation_pct.toFixed(0)}<span style={{ fontSize: "12px", fontWeight: 400, marginLeft: "3px" }}>%</span>
+            {s.memory_saturation_pct.toFixed(0)}
+            <span style={{ fontSize: "11px", fontWeight: 400, marginLeft: "4px", color: "var(--text-muted)" }}>% mem</span>
           </div>
           <Sparkline data={data.timeline.memory_saturation} color="#8b5cf6" />
-          <div className="signal-sub">CPU: {s.cpu_saturation_pct.toFixed(0)}%</div>
+          <div className="signal-sub">CPU load: {s.cpu_saturation_pct.toFixed(0)}%</div>
         </div>
       </div>
 
-      <div style={{ marginTop: "16px" }}>
-        <div className="section-title" style={{ marginBottom: "8px", fontSize: "10px" }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          Correlated Metrics Timeline
-          <span style={{ marginLeft: "4px", fontSize: "10px" }}>
-            <span style={{ color: "#ff4757" }}>— Error</span>&nbsp;
-            <span style={{ color: "#f59e0b" }}>— P99</span>&nbsp;
-            <span style={{ color: "#8b5cf6" }}>— Mem</span>
-          </span>
-        </div>
-        <div className="chart-container">
-          <div style={{ background: "var(--bg-elevated)", borderRadius: "var(--radius-sm)", padding: "8px 8px 4px", border: "1px solid var(--border)" }}>
-            <MultiSparkline timeline={data.timeline} />
+      <div style={{ marginTop: "18px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+            <Clock size={12} strokeWidth={2} />
+            <span>Correlated 15m Metric Series</span>
           </div>
-          <div className="chart-labels">
-            {data.timeline.timestamps.filter((_, i, a) => i === 0 || i === Math.floor(a.length / 2) || i === a.length - 1).map((ts, i) => (
-              <span key={i}>{new Date(ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
+          <div style={{ display: "flex", gap: "12px", fontSize: "11px", fontFamily: "var(--font-mono)" }}>
+            <span style={{ color: "#ef4444" }}>● Error %</span>
+            <span style={{ color: "#f59e0b" }}>● P99 ms</span>
+            <span style={{ color: "#8b5cf6" }}>● Memory %</span>
+          </div>
+        </div>
+
+        <div style={{ background: "var(--bg-elevated)", borderRadius: "var(--radius)", padding: "10px 12px 6px", border: "1px solid var(--border)" }}>
+          <MultiSparkline timeline={data.timeline} />
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px", fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+          {data.timeline.timestamps
+            .filter((_, i, a) => i === 0 || i === Math.floor(a.length / 2) || i === a.length - 1)
+            .map((ts, i) => (
+              <span key={i}>
+                {new Date(ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
+              </span>
             ))}
-          </div>
         </div>
+
         {data.deployment_marker && (
-          <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px" }}>
-            <span style={{ width: "10px", height: "1px", background: "var(--accent-cyan)", display: "inline-block" }} />
-            <span style={{ color: "var(--accent-cyan)" }}>Deploy: {data.deployment_marker.revision}</span>
-            <span style={{ color: "var(--text-muted)" }}>{data.deployment_marker.message}</span>
+          <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", background: "rgba(6, 182, 212, 0.08)", border: "1px solid rgba(6, 182, 212, 0.25)", padding: "6px 10px", borderRadius: "var(--radius-sm)" }}>
+            <ArrowUpRight size={13} strokeWidth={2} style={{ color: "var(--accent-cyan)" }} />
+            <span style={{ color: "var(--accent-cyan)", fontWeight: 600 }}>Deployment Rollout: {data.deployment_marker.revision}</span>
+            <span style={{ color: "var(--text-secondary)" }}>— {data.deployment_marker.message}</span>
           </div>
         )}
       </div>

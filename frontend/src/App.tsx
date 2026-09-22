@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { ShieldAlert, RefreshCw, Radio } from "lucide-react";
 import { useIncidents } from "./hooks/useIncidents";
 import { IncidentList } from "./components/IncidentList";
 import { IncidentDetail } from "./components/IncidentDetail";
@@ -28,39 +29,35 @@ export function App() {
       <header className="navbar">
         <div className="navbar-brand">
           <div className="brand-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
+            <ShieldAlert size={15} color="#ffffff" strokeWidth={2.2} />
           </div>
           <span>SRE Ops // Incident Agent</span>
         </div>
 
         <div className="navbar-divider" />
 
-        <div className="navbar-pill live">
-          <div className="pulse" />
+        {/* Standardized Status Pills */}
+        <div className="status-pill">
+          <span className="status-dot dot-emerald" />
           <span>Real-time Telemetry (SSE)</span>
         </div>
 
-        <div className="navbar-pill">
-          <span>Mode:</span>
-          <strong style={{ color: "var(--accent-cyan)", marginLeft: 3 }}>Simulator Cluster</strong>
+        <div className="status-pill">
+          <span className="status-dot dot-cyan" />
+          <span>Mode: <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Simulator Cluster</strong></span>
         </div>
 
         <div className="navbar-right">
           <button className="btn btn-ghost btn-sm" onClick={refetch} title="Force Refresh">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
-            </svg>
-            Refresh
+            <RefreshCw size={12} strokeWidth={2} />
+            <span>Refresh</span>
           </button>
         </div>
       </header>
 
-      {/* Main Grid */}
+      {/* Main Grid Layout */}
       <main className="main-layout">
-        {/* Left Pane: Incidents List */}
+        {/* Left Pane: Incidents List & Chaos Simulator */}
         <aside className="incident-list-pane">
           <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
             <ChaosPanel onFired={refetch} />
@@ -76,17 +73,14 @@ export function App() {
           )}
         </aside>
 
-        {/* Right Pane: Incident Details */}
+        {/* Right Pane: Incident Details & Timeline */}
         <section className="incident-detail-pane">
           {error && <ErrorBanner message={error} onRetry={refetch} />}
           {selectedIncident ? (
             <IncidentDetail incident={selectedIncident} onUpdate={refetch} />
           ) : (
             <div className="empty-state" style={{ height: "100%" }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 6v6l4 2" />
-              </svg>
+              <Radio size={40} strokeWidth={1.5} style={{ opacity: 0.3 }} />
               <h3>No Incident Selected</h3>
               <p>Trigger a simulated Prometheus alert using the Chaos Simulator on the left.</p>
             </div>

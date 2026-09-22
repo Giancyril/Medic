@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { Flame, AlertTriangle, Zap, TrendingDown, Activity } from "lucide-react";
 import { api } from "../api/client";
 
 interface Props {
@@ -11,8 +12,9 @@ export function ChaosPanel({ onFired }: Props) {
   const scenarios = [
     {
       id: "oom",
-      name: "🔥 OOMKilled Spike",
+      name: "OOMKilled Spike",
       desc: "Simulates checkout-service memory exhaustion and OOM termination",
+      icon: Flame,
       payload: {
         status: "firing",
         receiver: "alert-agent-webhook",
@@ -37,8 +39,9 @@ export function ChaosPanel({ onFired }: Props) {
     },
     {
       id: "crashloop",
-      name: "💥 CrashLoopBackOff",
+      name: "CrashLoopBackOff",
       desc: "Simulates payment-service restart loop after bad release",
+      icon: AlertTriangle,
       payload: {
         status: "firing",
         receiver: "alert-agent-webhook",
@@ -63,8 +66,9 @@ export function ChaosPanel({ onFired }: Props) {
     },
     {
       id: "errors",
-      name: "⚡ High Error Rate (5xx)",
+      name: "High Error Rate",
       desc: "Spikes API gateway error rate to 18.5% with upstream timeouts",
+      icon: Zap,
       payload: {
         status: "firing",
         receiver: "alert-agent-webhook",
@@ -88,8 +92,9 @@ export function ChaosPanel({ onFired }: Props) {
     },
     {
       id: "latency",
-      name: "⏱️ Latency Degraded (P99)",
+      name: "Latency Degraded",
       desc: "Simulates upstream timeout and degraded P99 latency",
+      icon: TrendingDown,
       payload: {
         status: "firing",
         receiver: "alert-agent-webhook",
@@ -127,25 +132,32 @@ export function ChaosPanel({ onFired }: Props) {
 
   return (
     <div className="chaos-panel">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: 700, color: "var(--accent-purple)", letterSpacing: "0.5px" }}>
-          <span>🧪</span> CHAOS INJECTION SIMULATOR
+      <div className="chaos-panel-header">
+        <div className="chaos-panel-title">
+          <Activity size={13} style={{ color: "var(--accent-primary)" }} />
+          <span>Chaos Simulator</span>
         </div>
-        <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>Simulate Prometheus Alerts</span>
+        <span style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+          Simulate Alerts
+        </span>
       </div>
-      <div className="chaos-buttons">
-        {scenarios.map((s) => (
-          <button
-            key={s.id}
-            className="btn-chaos"
-            disabled={loading !== null}
-            onClick={() => fireChaos(s)}
-            title={s.desc}
-            id={`btn-chaos-${s.id}`}
-          >
-            {loading === s.id ? "Firing…" : s.name}
-          </button>
-        ))}
+      <div className="chaos-buttons-grid">
+        {scenarios.map((s) => {
+          const Icon = s.icon;
+          return (
+            <button
+              key={s.id}
+              className="chaos-btn"
+              disabled={loading !== null}
+              onClick={() => fireChaos(s)}
+              title={s.desc}
+              id={`btn-chaos-${s.id}`}
+            >
+              <Icon size={14} className="chaos-icon" />
+              <span>{loading === s.id ? "Firing…" : s.name}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
