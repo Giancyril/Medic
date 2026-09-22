@@ -1,42 +1,40 @@
-﻿from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+﻿from fastapi import APIRouter, HTTPException, Depends, status
+from typing import List, Dict, Any
 from datetime import datetime, timezone
+from sqlalchemy.ext.asyncio import AsyncSession
+from backend.app.core.database import get_db
+from backend.app.schemas.incident import AlertmanagerWebhookPayload
+from backend.app.core.incident_manager import process_incoming_alert
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
-class AlertmanagerAlert(BaseModel):
-    status: str
-    labels: Dict[str, str] = Field(default_factory=dict)
-    annotations: Dict[str, str] = Field(default_factory=dict)
-    startsAt: Optional[str] = None
-    endsAt: Optional[str] = None
-    generatorURL: Optional[str] = None
-    fingerprint: Optional[str] = None
-
-class AlertmanagerWebhookPayload(BaseModel):
-    version: str = "4"
-    groupKey: Optional[str] = None
-    truncatedAlerts: int = 0
-    status: str
-    receiver: Optional[str] = None
-    groupLabels: Dict[str, str] = Field(default_factory=dict)
-    commonLabels: Dict[str, str] = Field(default_factory=dict)
-    commonAnnotations: Dict[str, str] = Field(default_factory=dict)
-    externalURL: Optional[str] = None
-    alerts: List[AlertmanagerAlert] = Field(default_factory=list)
-
 @router.post("/webhook", status_code=status.HTTP_202_ACCEPTED)
-async def receive_alertmanager_webhook(payload: AlertmanagerWebhookPayload):
+async def receive_alertmanager_webhook(
+    payload: AlertmanagerWebhookPayload,
+    db: AsyncSession = Depends(get_db)
+):
     """
     Receives Prometheus Alertmanager webhook payloads, parses alerts,
-    and enqueues them for investigation.
+    deduplicates against active incidents, persists updates/new incidents,
+    and returns processed incident identifiers.
     """
-    alert_count = len(payload.alerts)
+    processed_incidents = []
+    
+    # Process each firing alert
+    for alert in payload.alerts:
+        incident = await process_incoming_alert(db, alert)
+        processed_incidents.append({
+            "incident_id": incident.id,
+            "fingerprint": incident.fingerprint,
+            "status": incident.status,
+            "service": incident.service,
+            "firing_count": incident.firing_count
+        })
+
     return {
         "status": "accepted",
-        "alerts_received": alert_count,
-        "receiver": payload.receiver,
-        "common_labels": payload.commonLabels,
+        "alerts_received": len(payload.alerts),
+        "incidents_processed": len(processed_incidents),
+        "incidents": processed_incidents,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }

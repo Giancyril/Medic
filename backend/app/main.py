@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import settings
 from backend.app.core.database import init_db
 from backend.app.api.alerts import router as alerts_router
+from backend.app.api.incidents import router as incidents_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,6 +31,7 @@ app.add_middleware(
 
 # Routes
 app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
+app.include_router(incidents_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health", tags=["system"])
 async def health_check():
@@ -46,7 +48,8 @@ async def root():
         "message": "Incident Response Agent API is running",
         "docs_url": "/docs",
         "health_url": "/health",
-        "webhook_url": f"{settings.API_V1_PREFIX}/alerts/webhook"
+        "webhook_url": f"{settings.API_V1_PREFIX}/alerts/webhook",
+        "incidents_url": f"{settings.API_V1_PREFIX}/incidents"
     }
 
 if __name__ == "__main__":
