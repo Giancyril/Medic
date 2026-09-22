@@ -1,0 +1,55 @@
+﻿services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: incident-agent-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - SIMULATION_MODE=true
+      - PROMETHEUS_URL=http://prometheus:9090
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - PAGERDUTY_ROUTING_KEY=${PAGERDUTY_ROUTING_KEY:-}
+    volumes:
+      - backend-data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: incident-agent-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: incident-agent-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/local-dev/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/local-dev/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: incident-agent-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infra/local-dev/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    restart: unless-stopped
+
+volumes:
+  backend-data:

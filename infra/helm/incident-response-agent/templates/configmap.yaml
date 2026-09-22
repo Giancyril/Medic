@@ -1,0 +1,10 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+data:
+  ENVIRONMENT: "{{ .Values.env.environment }}"
+  SIMULATION_MODE: "{{ .Values.env.simulationMode }}"
+  PROMETHEUS_URL: "{{ .Values.env.prometheusUrl }}"
+  SLACK_WEBHOOK_URL: "{{ .Values.env.slackWebhookUrl }}"
+  PAGERDUTY_ROUTING_KEY: "{{ .Values.env.pagerdutyRoutingKey }}"

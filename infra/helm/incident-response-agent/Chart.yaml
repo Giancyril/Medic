@@ -1,0 +1,9 @@
+﻿apiVersion: v2
+name: incident-response-agent
+description: Autonomous Kubernetes SRE Incident Response Agent with Human Safety Gate
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: SRE Reliability Team
+    email: sre@company.corp
