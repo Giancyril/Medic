@@ -11,6 +11,7 @@ from backend.app.models.incident import Incident, IncidentEvent, IncidentStatus
 from backend.app.schemas.incident import IncidentRead
 from backend.app.core.incident_manager import broadcaster, utc_now
 from backend.agent.graph import incident_graph
+from backend.agent.escalate import dispatcher
 from backend.remediation.catalog import build_remediation_action
 from backend.remediation.executor import execute_remediation, SafetyGateError
 
@@ -23,6 +24,10 @@ class ApprovalRequest(BaseModel):
 class RejectionRequest(BaseModel):
     rejector: str
     reason: str
+
+class EscalationRequest(BaseModel):
+    reason: str
+    channel: Optional[str] = "slack"  # "slack", "pagerduty", "all"
 
 @router.post("/{incident_id}/investigate", response_model=IncidentRead)
 async def trigger_investigation(
@@ -210,6 +215,65 @@ async def reject_remediation(
         "id": incident.id,
         "status": incident.status,
         "rejector": body.rejector,
+        "reason": body.reason
+    })
+
+    return incident
+
+@router.post("/{incident_id}/escalate", response_model=IncidentRead)
+async def escalate_incident(
+    incident_id: str,
+    body: EscalationRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Explicitly escalates incident to on-call engineers via Slack or PagerDuty,
+    attaching full investigation context.
+    """
+    stmt = select(Incident).options(selectinload(Incident.events)).where(Incident.id == incident_id)
+    result = await db.execute(stmt)
+    incident = result.scalars().first()
+    if not incident:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Incident {incident_id} not found")
+
+    now = utc_now()
+    incident.status = IncidentStatus.ESCALATED.value
+    incident.last_seen_at = now
+
+    diag = incident.diagnosis
+    action = incident.remediation
+
+    dispatch_res = []
+    if body.channel in ["slack", "all"]:
+        slack_res = await dispatcher.dispatch_slack(
+            incident={"id": incident.id, "service": incident.service, "severity": incident.severity},
+            diagnosis=diag,
+            action=action
+        )
+        dispatch_res.append(slack_res)
+
+    if body.channel in ["pagerduty", "all"]:
+        pd_res = await dispatcher.dispatch_pagerduty(
+            incident={"id": incident.id, "service": incident.service, "severity": incident.severity, "fingerprint": incident.fingerprint},
+            diagnosis=diag
+        )
+        dispatch_res.append(pd_res)
+
+    event = IncidentEvent(
+        incident_id=incident.id,
+        event_type="ESCALATED",
+        message=f"Incident escalated via {body.channel}. Reason: {body.reason}",
+        payload_json=json.dumps({"reason": body.reason, "dispatches": dispatch_res}),
+        created_at=now
+    )
+    db.add(event)
+    await db.commit()
+    await db.refresh(incident)
+
+    await broadcaster.broadcast("incident_escalated", {
+        "id": incident.id,
+        "status": incident.status,
+        "channel": body.channel,
         "reason": body.reason
     })
 
