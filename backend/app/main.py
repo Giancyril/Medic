@@ -5,6 +5,7 @@ from backend.app.core.config import settings
 from backend.app.core.database import init_db
 from backend.app.api.alerts import router as alerts_router
 from backend.app.api.incidents import router as incidents_router
+from backend.app.api.remediation import router as remediation_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,6 +33,7 @@ app.add_middleware(
 # Routes
 app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
 app.include_router(incidents_router, prefix=settings.API_V1_PREFIX)
+app.include_router(remediation_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health", tags=["system"])
 async def health_check():
