@@ -111,3 +111,12 @@ def find_all_matching_runbooks(
     # Sort descending by score
     scored_runbooks.sort(key=lambda x: x[1], reverse=True)
     return scored_runbooks
+
+
+def load_runbook_by_id(runbook_id: str):
+    "Load a single runbook from the catalog by its ID."
+    for rb in load_runbook_catalog():
+        if rb.id == runbook_id:
+            return rb
+    return None
+
