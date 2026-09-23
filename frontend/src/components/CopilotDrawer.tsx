@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { Bot, Send, Sparkles, MessageSquare, Terminal } from 'lucide-react';
+import { Bot, Send, Sparkles, Terminal } from 'lucide-react';
 import { api } from '../api/client';
 import type { Incident } from '../types/incident';
 
@@ -30,7 +30,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ incident, isOpen, 
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(`sess-${incident.id}`);
+  const sessionId = `sess-${incident.id}`;
 
   if (!isOpen) return null;
 
@@ -170,3 +170,5 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ incident, isOpen, 
     </div>
   );
 };
+
+

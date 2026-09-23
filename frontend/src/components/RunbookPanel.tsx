@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { BookOpen, Play, CheckCircle, XCircle, AlertCircle, Clock, ShieldCheck, ChevronRight } from 'lucide-react';
+import { BookOpen, Play, CheckCircle, XCircle, Clock, ShieldCheck, ChevronRight } from 'lucide-react';
 import { api } from '../api/client';
 import type { Incident } from '../types/incident';
 
@@ -265,3 +265,4 @@ export const RunbookPanel: React.FC<RunbookPanelProps> = ({ incident }) => {
     </div>
   );
 };
+

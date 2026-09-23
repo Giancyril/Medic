@@ -35,6 +35,10 @@ import {
   getPodStatusClass,
 } from "../utils";
 import { GoldenSignals } from "./GoldenSignals";
+import { RunbookPanel } from "./RunbookPanel";
+import { CopilotDrawer } from "./CopilotDrawer";
+import { PostMortemModal } from "./PostMortemModal";
+import { Bot } from "lucide-react";
 import { api } from "../api/client";
 
 interface Props {
@@ -46,6 +50,8 @@ export function IncidentDetail({ incident: inc, onUpdate }: Props) {
   const [approving, setApproving] = useState(false);
   const [investigating, setInvestigating] = useState(false);
   const [escalating, setEscalating] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [postMortemOpen, setPostMortemOpen] = useState(false);
 
   const diag = hasDiagnosis(inc) ? (inc.diagnosis as Diagnosis) : null;
   const rem = hasRemediation(inc) ? (inc.remediation as RemediationAction) : null;
@@ -174,6 +180,26 @@ export function IncidentDetail({ incident: inc, onUpdate }: Props) {
                 <span>Resolve</span>
               </button>
             )}
+
+              <button
+                className="btn btn-secondary"
+                onClick={() => setCopilotOpen(true)}
+                title="Open Medic SRE Copilot AI chat"
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Bot size={13} strokeWidth={2.2} />
+                <span>Copilot AI</span>
+              </button>
+
+              <button
+                className="btn btn-secondary"
+                onClick={() => setPostMortemOpen(true)}
+                title="Generate blameless post-mortem report"
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <FileText size={13} strokeWidth={2.2} />
+                <span>Post-Mortem</span>
+              </button>
           </div>
         </div>
       </div>
@@ -241,6 +267,11 @@ export function IncidentDetail({ incident: inc, onUpdate }: Props) {
 
         {/* Golden Signals Metrics Card */}
         {ev?.golden_signals && <GoldenSignals data={ev.golden_signals} />}
+
+        {/* Automated Runbook Engine */}
+        <div style={{ marginBottom: "16px" }}>
+          <RunbookPanel incident={inc} />
+        </div>
 
         {/* AI Diagnosis Panel */}
         {diag && (
@@ -550,6 +581,18 @@ export function IncidentDetail({ incident: inc, onUpdate }: Props) {
           </div>
         )}
       </div>
+
+        <CopilotDrawer
+          incident={inc}
+          isOpen={copilotOpen}
+          onClose={() => setCopilotOpen(false)}
+        />
+
+        <PostMortemModal
+          incident={inc}
+          isOpen={postMortemOpen}
+          onClose={() => setPostMortemOpen(false)}
+        />
     </>
   );
 }
