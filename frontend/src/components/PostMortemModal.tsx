@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { FileText, Download, Check, Sparkles } from 'lucide-react';
+import { FileText, Download, Check, X } from 'lucide-react';
 import { api } from '../api/client';
 import type { Incident } from '../types/incident';
 
@@ -32,7 +32,7 @@ export const PostMortemModal: React.FC<PostMortemModalProps> = ({ incident, isOp
         golden_signals: incident.evidence?.golden_signals?.signals || {},
         agent_diagnosis: incident.diagnosis?.root_cause || 'Automated diagnosis verified root cause.',
         timeline: (incident.events || []).map((t: any) => ({
-          timestamp: t.timestamp,
+          timestamp: t.created_at || new Date().toISOString(),
           actor: t.event_type?.includes('AGENT') ? 'agent' : 'system',
           event: t.message || t.event_type,
         })),
@@ -64,70 +64,71 @@ export const PostMortemModal: React.FC<PostMortemModalProps> = ({ incident, isOp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#121316] border border-[#23272f] rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden text-slate-200">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#23272f] bg-[#16181d]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <FileText className="w-4 h-4" />
-            </div>
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+
             <div>
-              <h3 className="text-sm font-semibold text-white tracking-wide">Automated Post-Mortem Generator</h3>
-              <p className="text-[10px] text-slate-400">Blameless retrospective markdown report</p>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Automated Post-Mortem Generator</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Blameless retrospective markdown report</div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded bg-[#23272f]/50 hover:bg-[#23272f]"
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '4px', display: 'flex' }}
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 p-5 overflow-y-auto space-y-4">
+        <div className="modal-body">
           {!doc ? (
-            <div className="text-center py-12 space-y-3">
-              <div className="inline-flex p-3 rounded-full bg-[#181a20] border border-[#23272f] text-slate-400">
-                <FileText className="w-8 h-8" />
+            <div style={{ textAlign: 'center', padding: '40px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <div style={{ padding: '14px', borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-muted)', display: 'inline-flex' }}>
+                <FileText size={28} />
               </div>
-              <h4 className="text-sm font-medium text-slate-200">Generate Structured Incident Retrospective</h4>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>Generate Structured Incident Retrospective</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '440px', lineHeight: 1.5 }}>
                 Consolidates timeline events, golden signal anomalies, runbook steps, and diagnostic findings into a clean Markdown document for GitOps or Jira/Confluence.
-              </p>
+              </div>
               <button
                 disabled={loading}
                 onClick={handleGenerate}
-                className="mt-2 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-medium transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                className="btn btn-primary"
+                style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px' }}
               >
-                <Sparkles className="w-3.5 h-3.5" />
+
                 <span>{loading ? 'Synthesizing Report...' : 'Generate Post-Mortem Markdown'}</span>
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Word count: <strong className="text-slate-200">{doc.word_count}</strong></span>
-                <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)' }}>
+                <span>Word count: <strong style={{ color: 'var(--text-primary)' }}>{doc.word_count}</strong></span>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1 bg-[#1a1c23] hover:bg-[#23272f] border border-[#2a2f3a] text-slate-300 px-2.5 py-1 rounded text-xs transition-colors"
+                    className="btn btn-secondary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '11px' }}
                   >
-                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <FileText className="w-3 h-3" />}
+                    {copied ? <Check size={12} style={{ color: 'var(--color-success)' }} /> : <FileText size={12} />}
                     <span>{copied ? 'Copied!' : 'Copy Markdown'}</span>
                   </button>
                   <button
                     onClick={handleDownload}
-                    className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-xs font-medium transition-colors"
+                    className="btn btn-success"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '11px' }}
                   >
-                    <Download className="w-3 h-3" />
+                    <Download size={12} />
                     <span>Download .md</span>
                   </button>
                 </div>
               </div>
 
-              <div className="bg-[#0c0d10] border border-[#23272f] rounded-lg p-4 font-mono text-xs text-slate-300 overflow-x-auto max-h-[50vh] whitespace-pre-wrap leading-relaxed select-all">
+              <div className="modal-markdown-box">
                 {doc.markdown}
               </div>
             </div>
@@ -137,4 +138,3 @@ export const PostMortemModal: React.FC<PostMortemModalProps> = ({ incident, isOp
     </div>
   );
 };
-

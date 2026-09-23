@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { Bot, Send, Sparkles, Terminal } from 'lucide-react';
+import { Bot, Send, Sparkles, Terminal, X } from 'lucide-react';
 import { api } from '../api/client';
 import type { Incident } from '../types/incident';
 
@@ -73,102 +73,92 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ incident, isOpen, 
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-[#121316] border-l border-[#23272f] shadow-2xl flex flex-col z-50 text-slate-200">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#23272f] bg-[#16181d]">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-            <Bot className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold text-white tracking-wide flex items-center gap-1.5">
-              Medic SRE Copilot
-              <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1 py-0.2 rounded border border-indigo-500/30">AI</span>
-            </h3>
-            <p className="text-[10px] text-slate-400">Contextual Incident Assistant</p>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded bg-[#23272f]/50 hover:bg-[#23272f]"
-        >
-          ✕
-        </button>
-      </div>
+    <>
+      <div className="copilot-backdrop" onClick={onClose} />
+      <div className="copilot-drawer">
+        {/* Header */}
+        <div className="copilot-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
 
-      {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3.5 text-xs">
-        {messages.map((m, idx) => (
-          <div key={idx} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-            <div
-              className={`max-w-[85%] rounded-lg p-3 ${
-                m.role === 'user'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-[#181a20] border border-[#23272f] text-slate-200'
-              }`}
-            >
-              <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
-              
-              {m.referenced_runbook_id && (
-                <div className="mt-2 pt-2 border-t border-[#23272f] text-[10px] text-indigo-400 flex items-center gap-1">
-                  <Terminal className="w-3 h-3" />
-                  <span>Referenced Runbook: <strong>{m.referenced_runbook_id}</strong></span>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                Medic SRE Copilot
+                <span style={{ fontSize: '9px', background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>AI</span>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Contextual Incident Assistant</div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '4px', display: 'flex' }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className="copilot-messages">
+          {messages.map((m, idx) => (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+              <div className={m.role === 'user' ? 'copilot-msg-user' : 'copilot-msg-assistant'}>
+                <div>{m.content}</div>
+                {m.referenced_runbook_id && (
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Terminal size={12} />
+                    <span>Referenced Runbook: <strong>{m.referenced_runbook_id}</strong></span>
+                  </div>
+                )}
+              </div>
+
+              {m.suggestions && m.suggestions.length > 0 && (
+                <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {m.suggestions.map((s, sIdx) => (
+                    <button
+                      key={sIdx}
+                      onClick={() => handleSend(s)}
+                      className="copilot-pill-btn"
+                    >
+                      <Sparkles size={11} style={{ color: '#818cf8' }} />
+                      <span>{s}</span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
+          ))}
+          {loading && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic' }}>
+              <Bot size={14} className="spinner" />
+              <span>Copilot is formulating response...</span>
+            </div>
+          )}
+        </div>
 
-            {/* Quick Suggestions */}
-            {m.suggestions && m.suggestions.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {m.suggestions.map((s, sIdx) => (
-                  <button
-                    key={sIdx}
-                    onClick={() => handleSend(s)}
-                    className="text-[10px] bg-[#1a1c23] hover:bg-[#23272f] text-slate-300 border border-[#2a2f3a] rounded px-2 py-1 flex items-center gap-1 transition-colors text-left"
-                  >
-                    <Sparkles className="w-2.5 h-2.5 text-indigo-400" />
-                    <span>{s}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-        {loading && (
-          <div className="flex items-center gap-2 text-slate-400 text-xs italic">
-            <Bot className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-            <span>Copilot is formulating response...</span>
-          </div>
-        )}
-      </div>
-
-      {/* Input */}
-      <div className="p-3 border-t border-[#23272f] bg-[#16181d]">
+        {/* Input */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSend(input);
           }}
-          className="flex items-center gap-2"
+          className="copilot-input-bar"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask Copilot for diagnostic queries..."
-            className="flex-1 bg-[#0e0f12] border border-[#23272f] rounded px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="copilot-input"
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white p-1.5 rounded transition-all active:scale-95"
+            className="btn btn-primary"
+            style={{ padding: '6px 12px' }}
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send size={13} />
           </button>
         </form>
       </div>
-    </div>
+    </>
   );
 };
-
-

@@ -77,110 +77,111 @@ export const RunbookPanel: React.FC<RunbookPanelProps> = ({ incident }) => {
   };
 
   return (
-    <div className="bg-[#121316] border border-[#23272f] rounded-lg overflow-hidden flex flex-col h-full text-slate-200">
+    <div className="runbook-container">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#23272f] bg-[#16181d]">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-emerald-400" />
-          <span className="font-semibold text-sm tracking-wide">Runbook Automation Engine</span>
+      <div className="runbook-header">
+        <div className="runbook-title-group">
+          <BookOpen size={16} style={{ color: 'var(--color-success)' }} />
+          <span>Runbook Automation Engine</span>
         </div>
-        <div className="flex gap-1 bg-[#0d0e11] p-0.5 rounded border border-[#23272f] text-xs">
+        <div className="runbook-tab-group">
           <button
             onClick={() => setActiveTab('match')}
-            className={`px-2.5 py-1 rounded transition-colors ${activeTab === 'match' ? 'bg-[#23272f] text-white font-medium' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`runbook-tab-btn ${activeTab === 'match' ? 'active' : ''}`}
           >
             Recommended
           </button>
           <button
             onClick={() => setActiveTab('catalog')}
-            className={`px-2.5 py-1 rounded transition-colors ${activeTab === 'catalog' ? 'bg-[#23272f] text-white font-medium' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`runbook-tab-btn ${activeTab === 'catalog' ? 'active' : ''}`}
           >
             Catalog ({catalog.length})
           </button>
           {execution && (
             <button
               onClick={() => setActiveTab('execution')}
-              className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 ${activeTab === 'execution' ? 'bg-[#23272f] text-white font-medium' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`runbook-tab-btn ${activeTab === 'execution' ? 'active' : ''}`}
             >
               <span>Execution</span>
               {execution.is_completed ? (
-                execution.success ? <CheckCircle className="w-3 h-3 text-emerald-400" /> : <XCircle className="w-3 h-3 text-rose-400" />
+                execution.success ? <CheckCircle size={12} style={{ color: 'var(--color-success)' }} /> : <XCircle size={12} style={{ color: 'var(--color-critical)' }} />
               ) : (
-                <Clock className="w-3 h-3 text-amber-400 animate-spin" />
+                <Clock size={12} className="spinner" style={{ color: 'var(--color-warning)' }} />
               )}
             </button>
           )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4 flex-1 overflow-y-auto space-y-4">
+      {/* Body */}
+      <div className="runbook-body">
         {activeTab === 'match' && (
           <div>
             {matching ? (
-              <div className="text-center py-8 text-slate-400 text-xs">
+              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '12px' }}>
                 Analyzing incident telemetry & symptoms for optimal runbook match...
               </div>
             ) : matched ? (
-              <div className="border border-emerald-500/30 bg-emerald-950/10 rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between">
+              <div className="runbook-card">
+                <div className="runbook-card-header">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-emerald-400 text-sm">{matched.runbook_name}</span>
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '13px' }}>{matched.runbook_name}</span>
+                      <span className="runbook-match-badge">
                         {Math.round(matched.confidence_score * 100)}% Match
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">{matched.runbook_description}</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>{matched.runbook_description}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-300 py-1 border-y border-[#23272f]/60">
-                  <div>Severity: <span className="uppercase text-amber-400 font-mono">{matched.severity}</span></div>
-                  <div>Steps: <span className="font-mono">{matched.automated_step_count}/{matched.step_count} automated</span></div>
-                  <div>Est. Time: <span className="font-mono">{matched.estimated_duration_minutes}m</span></div>
+                <div className="runbook-meta-grid">
+                  <div>Severity: <strong style={{ color: 'var(--color-warning)', textTransform: 'uppercase' }}>{matched.severity}</strong></div>
+                  <div>Steps: <strong>{matched.automated_step_count}/{matched.step_count} automated</strong></div>
+                  <div>Est. Time: <strong>{matched.estimated_duration_minutes}m</strong></div>
                 </div>
 
-                <div className="flex justify-end pt-1">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '4px' }}>
                   <button
                     disabled={executing}
                     onClick={() => handleTrigger(matched.runbook_id)}
-                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-xs font-medium transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                    className="btn btn-success"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', fontSize: '12px' }}
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <Play size={12} style={{ fill: 'currentColor' }} />
                     <span>{executing ? 'Executing Runbook...' : 'Execute Runbook'}</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6 text-slate-500 text-xs">
-                No automatic runbook recommendation matched with high confidence. Explore the catalog below.
+              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                No automatic runbook recommendation matched with high confidence. Explore the catalog above.
               </div>
             )}
           </div>
         )}
 
         {activeTab === 'catalog' && (
-          <div className="space-y-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {catalog.map((rb) => (
-              <div key={rb.id} className="border border-[#23272f] hover:border-slate-700 bg-[#16181d] rounded p-3 text-xs transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-200">{rb.name}</span>
+              <div key={rb.id} className="runbook-step-row">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{rb.name}</span>
                   <button
                     onClick={() => handleTrigger(rb.id)}
-                    className="text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-0.5"
+                    style={{ background: 'transparent', border: 'none', color: 'var(--color-success)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px', fontWeight: 600, fontSize: '11px' }}
                   >
-                    Run <ChevronRight className="w-3 h-3" />
+                    Run <ChevronRight size={12} />
                   </button>
                 </div>
-                <p className="text-slate-400 text-[11px] mt-1">{rb.description}</p>
-                <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-500">
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '2px 0' }}>{rb.description}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '10px', color: 'var(--text-muted)' }}>
                   <span>{rb.step_count} steps</span>
                   <span>•</span>
                   <span>{rb.estimated_duration_minutes}m duration</span>
-                  <div className="flex gap-1 ml-auto">
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
                     {rb.tags?.map((t: string) => (
-                      <span key={t} className="bg-[#23272f] text-slate-400 px-1 rounded">{t}</span>
+                      <span key={t} style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '3px' }}>{t}</span>
                     ))}
                   </div>
                 </div>
@@ -190,23 +191,19 @@ export const RunbookPanel: React.FC<RunbookPanelProps> = ({ incident }) => {
         )}
 
         {activeTab === 'execution' && execution && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#23272f]">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
               <div>
-                <h4 className="font-medium text-xs text-slate-200">{execution.runbook_name}</h4>
-                <span className="text-[10px] text-slate-500">Target incident: {execution.incident_id}</span>
+                <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{execution.runbook_name}</h4>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Target incident: {execution.incident_id}</span>
               </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded border uppercase font-mono ${
-                execution.is_completed 
-                  ? (execution.success ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400')
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse'
-              }`}>
+              <span className={`badge ${execution.is_completed ? (execution.success ? 'badge-RESOLVED' : 'badge-CRITICAL') : 'badge-INVESTIGATING'}`}>
                 {execution.is_completed ? (execution.success ? 'Success' : 'Failed') : 'In Progress'}
               </span>
             </div>
 
             {/* Steps Timeline */}
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {execution.steps?.map((step: any, idx: number) => {
                 const isPassed = step.status === 'passed';
                 const isFailed = step.status === 'failed';
@@ -214,41 +211,43 @@ export const RunbookPanel: React.FC<RunbookPanelProps> = ({ incident }) => {
                 const isRunning = step.status === 'running';
 
                 return (
-                  <div key={idx} className="border border-[#23272f] bg-[#16181d] rounded p-2.5 text-xs space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        {isPassed && <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
-                        {isFailed && <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
-                        {isRunning && <Clock className="w-3.5 h-3.5 text-amber-400 animate-spin shrink-0" />}
-                        {isPending && <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />}
-                        <span className="font-medium text-slate-200">{step.title}</span>
+                  <div key={idx} className="runbook-step-row">
+                    <div className="runbook-step-header">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {isPassed && <CheckCircle size={14} style={{ color: 'var(--color-success)', flexShrink: 0 }} />}
+                        {isFailed && <XCircle size={14} style={{ color: 'var(--color-critical)', flexShrink: 0 }} />}
+                        {isRunning && <Clock size={14} className="spinner" style={{ color: 'var(--color-warning)', flexShrink: 0 }} />}
+                        {isPending && <Clock size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />}
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{step.title}</span>
                       </div>
-                      <span className="text-[10px] text-slate-500 uppercase">{step.action_type}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{step.action_type}</span>
                     </div>
 
                     {step.output && (
-                      <div className="bg-[#0e0f12] p-1.5 rounded font-mono text-[11px] text-slate-300 border border-[#23272f]">
+                      <div className="runbook-step-output">
                         {step.output}
                       </div>
                     )}
 
                     {step.action_type === 'human_confirmation' && isPending && (
-                      <div className="flex items-center gap-2 pt-1 border-t border-[#23272f]">
-                        <span className="text-[11px] text-amber-400 flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> Safety Gate: Approval Required
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--color-warning)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <ShieldCheck size={14} /> Safety Gate: Approval Required
                         </span>
-                        <div className="ml-auto flex gap-1">
+                        <div style={{ display: 'flex', gap: '6px' }}>
                           <button
                             disabled={approvingStep === idx}
                             onClick={() => handleApproveStep(idx, false)}
-                            className="bg-rose-900/40 hover:bg-rose-900/60 text-rose-300 px-2 py-0.5 rounded text-[10px] border border-rose-800"
+                            className="btn btn-danger"
+                            style={{ padding: '3px 8px', fontSize: '11px' }}
                           >
                             Reject
                           </button>
                           <button
                             disabled={approvingStep === idx}
                             onClick={() => handleApproveStep(idx, true)}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px]"
+                            className="btn btn-success"
+                            style={{ padding: '3px 8px', fontSize: '11px' }}
                           >
                             Approve
                           </button>
@@ -265,4 +264,3 @@ export const RunbookPanel: React.FC<RunbookPanelProps> = ({ incident }) => {
     </div>
   );
 };
-
