@@ -1,0 +1,39 @@
+﻿id: "rb-k8s-crashloop-rollback"
+name: "CrashLoopBackOff Bad Release Rollback Protocol"
+description: "Mitigation procedure for containers entering CrashLoopBackOff following a recent bad deployment rollout."
+target_service: "*"
+alert_patterns:
+  - "KubePodCrashLooping"
+  - "PodCrashLoop"
+  - "HighRestartRate"
+required_symptoms:
+  - "crashloop_backoff"
+  - "recent_deployment"
+steps:
+  - id: "step-1"
+    title: "Inspect Fatal Startup Container Logs"
+    description: "Scan latest stderr log tail for unhandled exception or missing configuration syntax errors."
+    action_type: "INSPECT_LOGS"
+    expected_condition: "errors_count > 0"
+    is_automated: true
+
+  - id: "step-2"
+    title: "Correlate Deployment Rollout History"
+    description: "Inspect deployment revision history to confirm recent revision rollout within last 30 minutes."
+    action_type: "INSPECT_PODS"
+    expected_condition: "deployment.revision > 1"
+    is_automated: true
+
+  - id: "step-3"
+    title: "Authorize Revision Rollback (Safety Gate)"
+    description: "High-risk Tier 3 action: request signed human approval to roll back to previous known-good deployment revision."
+    action_type: "HUMAN_CONFIRMATION"
+    command_or_query: "ROLLBACK_DEPLOYMENT"
+    is_automated: false
+
+  - id: "step-4"
+    title: "Verify ReplicaSet Ready Count"
+    description: "Confirm rolled-back ReplicaSet reaches 100% ready status with zero crash events."
+    action_type: "VERIFY_STABILIZATION"
+    expected_condition: "ready_replicas == desired_replicas"
+    is_automated: true

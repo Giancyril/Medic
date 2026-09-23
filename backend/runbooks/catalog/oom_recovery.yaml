@@ -1,0 +1,41 @@
+﻿id: "rb-k8s-oom-recovery"
+name: "Kubernetes Pod Memory Exhaustion (OOMKilled) Recovery"
+description: "Standard diagnostic checklist and stabilization protocol for pods terminated with Linux kernel Out-Of-Memory (exit code 137)."
+target_service: "*"
+alert_patterns:
+  - "KubePodOOMKilled"
+  - "MemoryUsageHigh"
+  - "ContainerOOM"
+required_symptoms:
+  - "exit_code_137"
+  - "memory_saturation_high"
+steps:
+  - id: "step-1"
+    title: "Verify OOM Termination Exit Code"
+    description: "Scan Kubernetes pod status to confirm container terminated with exit code 137 or reason OOMKilled."
+    action_type: "INSPECT_PODS"
+    expected_condition: "pod.exit_code == 137 or pod.reason == 'OOMKilled'"
+    is_automated: true
+
+  - id: "step-2"
+    title: "Inspect Peak Memory Saturation"
+    description: "Query container cgroup memory metrics to identify peak memory ceiling breach."
+    action_type: "CHECK_METRIC"
+    command_or_query: "container_memory_working_set_bytes / container_spec_memory_limit_bytes > 0.90"
+    expected_condition: "memory_saturation_pct >= 90"
+    is_automated: true
+
+  - id: "step-3"
+    title: "Execute Pod Restart & Eviction"
+    description: "Trigger graceful termination of crashed pod to enable Kubernetes scheduler to place fresh container on healthy node."
+    action_type: "EXECUTE_REMEDIATION"
+    command_or_query: "RESTART_POD"
+    is_automated: true
+
+  - id: "step-4"
+    title: "Verify Cluster Memory Stabilization"
+    description: "Verify new container achieves Ready status and working set memory stabilizes below 75% threshold."
+    action_type: "VERIFY_STABILIZATION"
+    command_or_query: "container_memory_working_set_bytes < 0.75"
+    expected_condition: "memory_saturation_pct < 75"
+    is_automated: true
