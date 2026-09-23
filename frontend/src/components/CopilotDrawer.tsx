@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { Bot, Send, Sparkles, Terminal, X } from 'lucide-react';
+import { Bot, Send, Terminal, X } from 'lucide-react';
 import { api } from '../api/client';
 import type { Incident } from '../types/incident';
 
@@ -118,7 +118,6 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ incident, isOpen, 
                       onClick={() => handleSend(s)}
                       className="copilot-pill-btn"
                     >
-                      <Sparkles size={11} style={{ color: '#818cf8' }} />
                       <span>{s}</span>
                     </button>
                   ))}
@@ -162,3 +161,4 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ incident, isOpen, 
     </>
   );
 };
+
