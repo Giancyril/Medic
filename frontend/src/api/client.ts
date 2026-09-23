@@ -57,4 +57,55 @@ export const api = {
         body: JSON.stringify({ status, reason }),
       }),
   },
+  runbooks: {
+    catalog: () => request<{ count: number; runbooks: any[] }>("/runbooks/catalog"),
+    get: (id: string) => request<any>(`/runbooks/catalog/${id}`),
+    match: (incident: any, evidence?: any) =>
+      request<any>("/runbooks/match", {
+        method: "POST",
+        body: JSON.stringify({ incident, evidence }),
+      }),
+    trigger: (runbookId: string, incident: any, evidence?: any) =>
+      request<{ execution_id: string; runbook_id: string; runbook_name: string; incident_id: string; status: string; message: string }>(
+        "/runbooks/trigger",
+        {
+          method: "POST",
+          body: JSON.stringify({ runbook_id: runbookId, incident, evidence }),
+        }
+      ),
+    status: (executionId: string) => request<any>(`/runbooks/status/${executionId}`),
+    approve: (executionId: string, stepIndex: number, approved: boolean, approver = "operator", reason?: string) =>
+      request<any>("/runbooks/approve", {
+        method: "POST",
+        body: JSON.stringify({ execution_id: executionId, step_index: stepIndex, approved, approver, reason }),
+      }),
+  },
+  copilot: {
+    createSession: (incidentId?: string, incidentContext?: any) =>
+      request<{ session_id: string; incident_id?: string; message: string }>("/copilot/sessions", {
+        method: "POST",
+        body: JSON.stringify({ incident_id: incidentId, incident_context: incidentContext }),
+      }),
+    chat: (sessionId: string, message: string, incidentContext?: any) =>
+      request<{ session_id: string; reply: string; suggestions: string[]; referenced_runbook_id?: string; confidence: number }>(
+        "/copilot/chat",
+        {
+          method: "POST",
+          body: JSON.stringify({ session_id: sessionId, message, incident_context: incidentContext }),
+        }
+      ),
+    getSession: (sessionId: string) => request<any>(`/copilot/sessions/${sessionId}`),
+  },
+  postmortems: {
+    generate: (data: any) =>
+      request<{ incident_id: string; title: string; markdown: string; generated_at: string; word_count: number }>(
+        "/postmortems/generate",
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        }
+      ),
+    get: (incidentId: string) => request<any>(`/postmortems/${incidentId}`),
+    list: () => request<{ count: number; postmortems: any[] }>("/postmortems/"),
+  },
 };
