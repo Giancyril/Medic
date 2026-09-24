@@ -108,4 +108,24 @@ export const api = {
     get: (incidentId: string) => request<any>(`/postmortems/${incidentId}`),
     list: () => request<{ count: number; postmortems: any[] }>("/postmortems/"),
   },
+  telemetry: {
+    getSeries: (service: string, metricName: string, limit = 60) =>
+      request<{ service: string; metric_name: string; count: number; points: Array<{ timestamp: string; value: number }> }>(
+        `/telemetry/series/${service}/${metricName}?limit=${limit}`
+      ),
+    getSLOs: (service?: string) =>
+      request<{ count: number; slos: Array<{ slo_id: string; service: string; target_pct: number; current_pct: number; burn_rate: number; error_budget_remaining_pct: number; is_breached: boolean; status: string; evaluated_at: string }> }>(
+        `/telemetry/slos${service ? "?service=" + service : ""}`
+      ),
+    getCorrelations: (service: string) =>
+      request<{ service: string; primary_metric: string; correlations: Array<{ signal_name: string; service: string; correlation_coefficient: number; lag_seconds: number; p_value: number; description: string }> }>(
+        `/telemetry/correlations/${service}`
+      ),
+    tick: (chaosScenario = "nominal") =>
+      request<{ status: string; points_count: number; chaos_applied: string }>(
+        `/telemetry/tick?chaos_scenario=${chaosScenario}`,
+        { method: "POST" }
+      ),
+  },
 };
+
