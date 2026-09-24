@@ -9,6 +9,7 @@ from backend.app.api.remediation import router as remediation_router
 from backend.app.api.runbooks import router as runbooks_router
 from backend.app.api.copilot import router as copilot_router
 from backend.app.api.postmortems import router as postmortems_router
+from backend.app.api.telemetry import router as telemetry_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,6 +41,7 @@ app.include_router(remediation_router, prefix=settings.API_V1_PREFIX)
 app.include_router(runbooks_router, prefix=settings.API_V1_PREFIX)
 app.include_router(copilot_router, prefix=settings.API_V1_PREFIX)
 app.include_router(postmortems_router, prefix=settings.API_V1_PREFIX)
+app.include_router(telemetry_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health", tags=["system"])
 async def health_check():
@@ -63,6 +65,7 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, reload=True)
+
 
 
 
