@@ -35,6 +35,8 @@ import {
   getPodStatusClass,
 } from "../utils";
 import { GoldenSignals } from "./GoldenSignals";
+import { SLOMonitorPanel } from "./SLOMonitorPanel";
+import { CorrelationGraphPanel } from "./CorrelationGraphPanel";
 import { RunbookPanel } from "./RunbookPanel";
 import { CopilotDrawer } from "./CopilotDrawer";
 import { PostMortemModal } from "./PostMortemModal";
@@ -264,6 +266,12 @@ export function IncidentDetail({ incident: inc, onUpdate }: Props) {
 
         {/* Connected Pipeline Timeline */}
         <ConnectedPipelineTimeline inc={inc} />
+
+        {/* Multi-Window SLO & Burn Rate Monitor */}
+        <SLOMonitorPanel service={inc.service} />
+
+        {/* Cross-Signal Anomaly Correlation */}
+        <CorrelationGraphPanel service={inc.service} />
 
         {/* Golden Signals Metrics Card */}
         {ev?.golden_signals && <GoldenSignals data={ev.golden_signals} />}

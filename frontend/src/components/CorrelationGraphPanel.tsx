@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { GitCommit, ArrowRight, Zap, RefreshCw } from 'lucide-react';
+import { Zap, RefreshCw } from 'lucide-react';
 import { api } from '../api/client';
 
 interface CorrelationProps {
@@ -99,3 +99,4 @@ export const CorrelationGraphPanel: React.FC<CorrelationProps> = ({ service }) =
     </div>
   );
 };
+

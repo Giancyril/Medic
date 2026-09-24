@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { ShieldAlert, TrendingDown, CheckCircle, AlertTriangle, Flame, Clock } from 'lucide-react';
+import { ShieldAlert, Flame, Clock } from 'lucide-react';
 import { api } from '../api/client';
 
 interface SLOStatusProps {
@@ -121,3 +121,4 @@ export const SLOMonitorPanel: React.FC<SLOStatusProps> = ({ service }) => {
     </div>
   );
 };
+
