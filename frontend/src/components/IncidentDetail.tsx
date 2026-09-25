@@ -40,6 +40,8 @@ import { CorrelationGraphPanel } from "./CorrelationGraphPanel";
 import { RunbookPanel } from "./RunbookPanel";
 import { CopilotDrawer } from "./CopilotDrawer";
 import { PostMortemModal } from "./PostMortemModal";
+import { ServiceTopologyPanel } from "./ServiceTopologyPanel";
+import { PredictiveHealthPanel } from "./PredictiveHealthPanel";
 import { Bot } from "lucide-react";
 import { api } from "../api/client";
 
@@ -272,6 +274,12 @@ export function IncidentDetail({ incident: inc, onUpdate }: Props) {
 
         {/* Cross-Signal Anomaly Correlation */}
         <CorrelationGraphPanel service={inc.service} />
+
+        {/* Day 3: Multi-Service Dependency Topology & Blast Radius */}
+        <ServiceTopologyPanel selectedServiceId={inc.service} />
+
+        {/* Day 3: Predictive Health, Time-to-Failure & Alert Deduplication */}
+        <PredictiveHealthPanel incidentId={inc.id} service={inc.service} />
 
         {/* Golden Signals Metrics Card */}
         {ev?.golden_signals && <GoldenSignals data={ev.golden_signals} />}
@@ -756,4 +764,5 @@ function ConnectedPipelineTimeline({ inc }: { inc: Incident }) {
     </div>
   );
 }
+
 

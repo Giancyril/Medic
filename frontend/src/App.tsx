@@ -1,14 +1,19 @@
 ﻿import { useState, useEffect } from "react";
-import { ShieldAlert, RefreshCw, Radio } from "lucide-react";
+import { ShieldAlert, RefreshCw, Radio, Network, TrendingUp } from "lucide-react";
 import { useIncidents } from "./hooks/useIncidents";
 import { IncidentList } from "./components/IncidentList";
 import { IncidentDetail } from "./components/IncidentDetail";
 import { ChaosPanel } from "./components/ChaosPanel";
 import { LoadingOverlay, ErrorBanner } from "./components/Loading";
+import { ServiceTopologyPanel } from "./components/ServiceTopologyPanel";
+import { PredictiveHealthPanel } from "./components/PredictiveHealthPanel";
+
+type ActiveTab = "incidents" | "topology" | "predictive";
 
 export function App() {
   const { incidents, loading, error, refetch } = useIncidents(5000);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("incidents");
 
   // Auto-select first incident if none selected or if selected one disappears
   useEffect(() => {
@@ -36,6 +41,33 @@ export function App() {
 
         <div className="navbar-divider" />
 
+        {/* Global Navigation Tabs */}
+        <div style={{ display: "flex", gap: "6px" }}>
+          <button
+            className={`btn btn-sm ${activeTab === "incidents" ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setActiveTab("incidents")}
+          >
+            <Radio size={12} strokeWidth={2} />
+            <span>Incident Workspace</span>
+          </button>
+          <button
+            className={`btn btn-sm ${activeTab === "topology" ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setActiveTab("topology")}
+          >
+            <Network size={12} strokeWidth={2} />
+            <span>Service Topology</span>
+          </button>
+          <button
+            className={`btn btn-sm ${activeTab === "predictive" ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setActiveTab("predictive")}
+          >
+            <TrendingUp size={12} strokeWidth={2} />
+            <span>Predictive & On-Call</span>
+          </button>
+        </div>
+
+        <div className="navbar-divider" />
+
         {/* Standardized Status Pills */}
         <div className="status-pill">
           <span className="status-dot dot-emerald" />
@@ -55,38 +87,48 @@ export function App() {
         </div>
       </header>
 
-      {/* Main Grid Layout */}
-      <main className="main-layout">
-        {/* Left Pane: Incidents List & Chaos Simulator */}
-        <aside className="incident-list-pane">
-          <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
-            <ChaosPanel onFired={refetch} />
-          </div>
-          {loading && incidents.length === 0 ? (
-            <LoadingOverlay visible={true} message="Fetching incidents..." />
-          ) : (
-            <IncidentList
-              incidents={incidents}
-              selectedId={selectedId}
-              onSelect={(id) => setSelectedId(id)}
-            />
-          )}
-        </aside>
-
-        {/* Right Pane: Incident Details & Timeline */}
-        <section className="incident-detail-pane">
-          {error && <ErrorBanner message={error} onRetry={refetch} />}
-          {selectedIncident ? (
-            <IncidentDetail incident={selectedIncident} onUpdate={refetch} />
-          ) : (
-            <div className="empty-state" style={{ height: "100%" }}>
-              <Radio size={40} strokeWidth={1.5} style={{ opacity: 0.3 }} />
-              <h3>No Incident Selected</h3>
-              <p>Trigger a simulated Prometheus alert using the Chaos Simulator on the left.</p>
+      {/* Main Layout Body */}
+      {activeTab === "incidents" ? (
+        <main className="main-layout">
+          {/* Left Pane: Incidents List & Chaos Simulator */}
+          <aside className="incident-list-pane">
+            <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
+              <ChaosPanel onFired={refetch} />
             </div>
-          )}
-        </section>
-      </main>
+            {loading && incidents.length === 0 ? (
+              <LoadingOverlay visible={true} message="Fetching incidents..." />
+            ) : (
+              <IncidentList
+                incidents={incidents}
+                selectedId={selectedId}
+                onSelect={(id) => setSelectedId(id)}
+              />
+            )}
+          </aside>
+
+          {/* Right Pane: Incident Details & Timeline */}
+          <section className="incident-detail-pane">
+            {error && <ErrorBanner message={error} onRetry={refetch} />}
+            {selectedIncident ? (
+              <IncidentDetail incident={selectedIncident} onUpdate={refetch} />
+            ) : (
+              <div className="empty-state" style={{ height: "100%" }}>
+                <Radio size={40} strokeWidth={1.5} style={{ opacity: 0.3 }} />
+                <h3>No Incident Selected</h3>
+                <p>Trigger a simulated Prometheus alert using the Chaos Simulator on the left.</p>
+              </div>
+            )}
+          </section>
+        </main>
+      ) : activeTab === "topology" ? (
+        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
+          <ServiceTopologyPanel selectedServiceId={selectedIncident?.service} />
+        </div>
+      ) : (
+        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
+          <PredictiveHealthPanel incidentId={selectedIncident?.id} service={selectedIncident?.service} />
+        </div>
+      )}
     </div>
   );
 }
