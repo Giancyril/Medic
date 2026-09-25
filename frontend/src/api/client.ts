@@ -1,4 +1,13 @@
 ﻿import type { Incident } from "../types/incident";
+import type {
+  TopologyGraph,
+  BlastRadiusReport,
+  ClusterPredictionSummary,
+  IncidentCluster,
+  NoiseReductionStats,
+  OnCallRosterStatus,
+  PageEvent,
+} from "../types/day3";
 
 const BASE = "http://localhost:8000/api/v1";
 
@@ -127,5 +136,52 @@ export const api = {
         { method: "POST" }
       ),
   },
+  topology: {
+    getGraph: () => request<TopologyGraph>("/topology/graph"),
+    calculateBlastRadius: (serviceId: string) =>
+      request<BlastRadiusReport>("/topology/blast-radius", {
+        method: "POST",
+        body: JSON.stringify({ service_id: serviceId }),
+      }),
+    updateHealth: (serviceId: string, health: string, incidentId?: string) =>
+      request<{ status: string; service_id: string; new_health: string }>(
+        `/topology/nodes/${serviceId}/health`,
+        {
+          method: "POST",
+          body: JSON.stringify({ health, incident_id: incidentId }),
+        }
+      ),
+  },
+  prediction: {
+    getForecasts: () => request<ClusterPredictionSummary>("/prediction/forecasts"),
+  },
+  grouping: {
+    getClusters: () => request<{ clusters: IncidentCluster[] }>("/grouping/clusters"),
+    getStats: () => request<NoiseReductionStats>("/grouping/stats"),
+    ingest: (alertId: string, alertName: string, service: string, severity = "critical") =>
+      request<IncidentCluster>("/grouping/ingest", {
+        method: "POST",
+        body: JSON.stringify({
+          alert_id: alertId,
+          alert_name: alertName,
+          service,
+          severity,
+        }),
+      }),
+  },
+  oncall: {
+    getStatus: () => request<OnCallRosterStatus>("/oncall/status"),
+    page: (incidentId: string, tier = 1, notes?: string) =>
+      request<PageEvent>("/oncall/page", {
+        method: "POST",
+        body: JSON.stringify({ incident_id: incidentId, tier, notes }),
+      }),
+    acknowledge: (pageId: string) =>
+      request<PageEvent>(`/oncall/page/${pageId}/ack`, { method: "POST" }),
+    escalate: (pageId: string, reason?: string) =>
+      request<PageEvent>(`/oncall/page/${pageId}/escalate`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      }),
+  },
 };
-
