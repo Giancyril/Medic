@@ -8,6 +8,9 @@ import {
   GitFork,
   Zap,
   Shield,
+  Globe,
+  DollarSign,
+  Cpu,
 } from "lucide-react";
 import { useIncidents } from "./hooks/useIncidents";
 import { IncidentList } from "./components/IncidentList";
@@ -19,6 +22,9 @@ import { PredictiveHealthPanel } from "./components/PredictiveHealthPanel";
 import { CanaryAnalysisPanel } from "./components/CanaryAnalysisPanel";
 import { ResiliencePanel } from "./components/ResiliencePanel";
 import { AuditTrailPanel } from "./components/AuditTrailPanel";
+import { MultiClusterPanel } from "./components/MultiClusterPanel";
+import { FinOpsPanel } from "./components/FinOpsPanel";
+import { SelfHealingPanel } from "./components/SelfHealingPanel";
 
 type ActiveTab =
   | "incidents"
@@ -26,14 +32,16 @@ type ActiveTab =
   | "predictive"
   | "canary"
   | "resilience"
-  | "audit";
+  | "audit"
+  | "multicluster"
+  | "finops"
+  | "selfhealing";
 
 export function App() {
   const { incidents, loading, error, refetch } = useIncidents(5000);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("incidents");
 
-  // Auto-select first incident if none selected or if selected one disappears
   useEffect(() => {
     if (incidents.length > 0) {
       if (!selectedId || !incidents.some((i) => i.id === selectedId)) {
@@ -46,9 +54,73 @@ export function App() {
 
   const selectedIncident = incidents.find((i) => i.id === selectedId) ?? null;
 
+  const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
+    { id: "incidents", label: "Incidents", icon: <Radio size={12} strokeWidth={2} /> },
+    { id: "topology", label: "Topology", icon: <Network size={12} strokeWidth={2} /> },
+    { id: "predictive", label: "Predictive", icon: <TrendingUp size={12} strokeWidth={2} /> },
+    { id: "canary", label: "Canary", icon: <GitFork size={12} strokeWidth={2} /> },
+    { id: "resilience", label: "Resilience", icon: <Zap size={12} strokeWidth={2} /> },
+    { id: "audit", label: "Audit", icon: <Shield size={12} strokeWidth={2} /> },
+    { id: "multicluster", label: "Multi-Cluster", icon: <Globe size={12} strokeWidth={2} /> },
+    { id: "finops", label: "FinOps", icon: <DollarSign size={12} strokeWidth={2} /> },
+    { id: "selfhealing", label: "Self-Healing", icon: <Cpu size={12} strokeWidth={2} /> },
+  ];
+
+  const renderPanel = () => {
+    const wrapStyle: React.CSSProperties = {
+      padding: "20px 24px",
+      overflowY: "auto",
+      height: "calc(100vh - 54px)",
+    };
+    switch (activeTab) {
+      case "incidents":
+        return (
+          <main className="main-layout">
+            <aside className="incident-list-pane">
+              <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
+                <ChaosPanel onFired={refetch} />
+              </div>
+              {loading && incidents.length === 0 ? (
+                <LoadingOverlay visible={true} message="Fetching incidents..." />
+              ) : (
+                <IncidentList incidents={incidents} selectedId={selectedId} onSelect={(id) => setSelectedId(id)} />
+              )}
+            </aside>
+            <section className="incident-detail-pane">
+              {error && <ErrorBanner message={error} onRetry={refetch} />}
+              {selectedIncident ? (
+                <IncidentDetail incident={selectedIncident} onUpdate={refetch} />
+              ) : (
+                <div className="empty-state" style={{ height: "100%" }}>
+                  <Radio size={40} strokeWidth={1.5} style={{ opacity: 0.3 }} />
+                  <h3>No Incident Selected</h3>
+                  <p>Trigger a simulated Prometheus alert using the Chaos Simulator on the left.</p>
+                </div>
+              )}
+            </section>
+          </main>
+        );
+      case "topology":
+        return <div style={wrapStyle}><ServiceTopologyPanel selectedServiceId={selectedIncident?.service} /></div>;
+      case "predictive":
+        return <div style={wrapStyle}><PredictiveHealthPanel incidentId={selectedIncident?.id} service={selectedIncident?.service} /></div>;
+      case "canary":
+        return <div style={wrapStyle}><CanaryAnalysisPanel service={selectedIncident?.service} /></div>;
+      case "resilience":
+        return <div style={wrapStyle}><ResiliencePanel /></div>;
+      case "audit":
+        return <div style={wrapStyle}><AuditTrailPanel incidentId={selectedIncident?.id} /></div>;
+      case "multicluster":
+        return <div style={wrapStyle}><MultiClusterPanel incidentService={selectedIncident?.service} /></div>;
+      case "finops":
+        return <div style={wrapStyle}><FinOpsPanel incidentId={selectedIncident?.id} service={selectedIncident?.service} /></div>;
+      case "selfhealing":
+        return <div style={wrapStyle}><SelfHealingPanel incidentId={selectedIncident?.id} service={selectedIncident?.service} /></div>;
+    }
+  };
+
   return (
     <div className="app-shell">
-      {/* Top Navbar */}
       <header className="navbar">
         <div className="navbar-brand">
           <div className="brand-icon">
@@ -59,55 +131,22 @@ export function App() {
 
         <div className="navbar-divider" />
 
-        {/* Global Navigation Tabs */}
-        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          <button
-            className={`btn btn-sm ${activeTab === "incidents" ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setActiveTab("incidents")}
-          >
-            <Radio size={12} strokeWidth={2} />
-            <span>Incidents</span>
-          </button>
-          <button
-            className={`btn btn-sm ${activeTab === "topology" ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setActiveTab("topology")}
-          >
-            <Network size={12} strokeWidth={2} />
-            <span>Topology</span>
-          </button>
-          <button
-            className={`btn btn-sm ${activeTab === "predictive" ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setActiveTab("predictive")}
-          >
-            <TrendingUp size={12} strokeWidth={2} />
-            <span>Predictive</span>
-          </button>
-          <button
-            className={`btn btn-sm ${activeTab === "canary" ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setActiveTab("canary")}
-          >
-            <GitFork size={12} strokeWidth={2} />
-            <span>Canary</span>
-          </button>
-          <button
-            className={`btn btn-sm ${activeTab === "resilience" ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setActiveTab("resilience")}
-          >
-            <Zap size={12} strokeWidth={2} />
-            <span>Resilience</span>
-          </button>
-          <button
-            className={`btn btn-sm ${activeTab === "audit" ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setActiveTab("audit")}
-          >
-            <Shield size={12} strokeWidth={2} />
-            <span>Audit & Replay</span>
-          </button>
+        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              id={`tab-${t.id}`}
+              className={`btn btn-sm ${activeTab === t.id ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => setActiveTab(t.id)}
+            >
+              {t.icon}
+              <span>{t.label}</span>
+            </button>
+          ))}
         </div>
 
         <div className="navbar-divider" />
 
-        {/* Standardized Status Pills */}
         <div className="status-pill">
           <span className="status-dot dot-emerald" />
           <span>Real-time Telemetry (SSE)</span>
@@ -126,60 +165,7 @@ export function App() {
         </div>
       </header>
 
-      {/* Main Layout Body */}
-      {activeTab === "incidents" ? (
-        <main className="main-layout">
-          {/* Left Pane: Incidents List & Chaos Simulator */}
-          <aside className="incident-list-pane">
-            <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
-              <ChaosPanel onFired={refetch} />
-            </div>
-            {loading && incidents.length === 0 ? (
-              <LoadingOverlay visible={true} message="Fetching incidents..." />
-            ) : (
-              <IncidentList
-                incidents={incidents}
-                selectedId={selectedId}
-                onSelect={(id) => setSelectedId(id)}
-              />
-            )}
-          </aside>
-
-          {/* Right Pane: Incident Details & Timeline */}
-          <section className="incident-detail-pane">
-            {error && <ErrorBanner message={error} onRetry={refetch} />}
-            {selectedIncident ? (
-              <IncidentDetail incident={selectedIncident} onUpdate={refetch} />
-            ) : (
-              <div className="empty-state" style={{ height: "100%" }}>
-                <Radio size={40} strokeWidth={1.5} style={{ opacity: 0.3 }} />
-                <h3>No Incident Selected</h3>
-                <p>Trigger a simulated Prometheus alert using the Chaos Simulator on the left.</p>
-              </div>
-            )}
-          </section>
-        </main>
-      ) : activeTab === "topology" ? (
-        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
-          <ServiceTopologyPanel selectedServiceId={selectedIncident?.service} />
-        </div>
-      ) : activeTab === "predictive" ? (
-        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
-          <PredictiveHealthPanel incidentId={selectedIncident?.id} service={selectedIncident?.service} />
-        </div>
-      ) : activeTab === "canary" ? (
-        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
-          <CanaryAnalysisPanel service={selectedIncident?.service} />
-        </div>
-      ) : activeTab === "resilience" ? (
-        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
-          <ResiliencePanel />
-        </div>
-      ) : (
-        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
-          <AuditTrailPanel incidentId={selectedIncident?.id} />
-        </div>
-      )}
+      {renderPanel()}
     </div>
   );
 }
