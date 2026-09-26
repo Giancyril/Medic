@@ -1,5 +1,14 @@
 ﻿import { useState, useEffect } from "react";
-import { ShieldAlert, RefreshCw, Radio, Network, TrendingUp } from "lucide-react";
+import {
+  ShieldAlert,
+  RefreshCw,
+  Radio,
+  Network,
+  TrendingUp,
+  GitFork,
+  Zap,
+  Shield,
+} from "lucide-react";
 import { useIncidents } from "./hooks/useIncidents";
 import { IncidentList } from "./components/IncidentList";
 import { IncidentDetail } from "./components/IncidentDetail";
@@ -7,8 +16,17 @@ import { ChaosPanel } from "./components/ChaosPanel";
 import { LoadingOverlay, ErrorBanner } from "./components/Loading";
 import { ServiceTopologyPanel } from "./components/ServiceTopologyPanel";
 import { PredictiveHealthPanel } from "./components/PredictiveHealthPanel";
+import { CanaryAnalysisPanel } from "./components/CanaryAnalysisPanel";
+import { ResiliencePanel } from "./components/ResiliencePanel";
+import { AuditTrailPanel } from "./components/AuditTrailPanel";
 
-type ActiveTab = "incidents" | "topology" | "predictive";
+type ActiveTab =
+  | "incidents"
+  | "topology"
+  | "predictive"
+  | "canary"
+  | "resilience"
+  | "audit";
 
 export function App() {
   const { incidents, loading, error, refetch } = useIncidents(5000);
@@ -42,27 +60,48 @@ export function App() {
         <div className="navbar-divider" />
 
         {/* Global Navigation Tabs */}
-        <div style={{ display: "flex", gap: "6px" }}>
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           <button
             className={`btn btn-sm ${activeTab === "incidents" ? "btn-primary" : "btn-ghost"}`}
             onClick={() => setActiveTab("incidents")}
           >
             <Radio size={12} strokeWidth={2} />
-            <span>Incident Workspace</span>
+            <span>Incidents</span>
           </button>
           <button
             className={`btn btn-sm ${activeTab === "topology" ? "btn-primary" : "btn-ghost"}`}
             onClick={() => setActiveTab("topology")}
           >
             <Network size={12} strokeWidth={2} />
-            <span>Service Topology</span>
+            <span>Topology</span>
           </button>
           <button
             className={`btn btn-sm ${activeTab === "predictive" ? "btn-primary" : "btn-ghost"}`}
             onClick={() => setActiveTab("predictive")}
           >
             <TrendingUp size={12} strokeWidth={2} />
-            <span>Predictive & On-Call</span>
+            <span>Predictive</span>
+          </button>
+          <button
+            className={`btn btn-sm ${activeTab === "canary" ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setActiveTab("canary")}
+          >
+            <GitFork size={12} strokeWidth={2} />
+            <span>Canary</span>
+          </button>
+          <button
+            className={`btn btn-sm ${activeTab === "resilience" ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setActiveTab("resilience")}
+          >
+            <Zap size={12} strokeWidth={2} />
+            <span>Resilience</span>
+          </button>
+          <button
+            className={`btn btn-sm ${activeTab === "audit" ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setActiveTab("audit")}
+          >
+            <Shield size={12} strokeWidth={2} />
+            <span>Audit & Replay</span>
           </button>
         </div>
 
@@ -124,9 +163,21 @@ export function App() {
         <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
           <ServiceTopologyPanel selectedServiceId={selectedIncident?.service} />
         </div>
-      ) : (
+      ) : activeTab === "predictive" ? (
         <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
           <PredictiveHealthPanel incidentId={selectedIncident?.id} service={selectedIncident?.service} />
+        </div>
+      ) : activeTab === "canary" ? (
+        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
+          <CanaryAnalysisPanel service={selectedIncident?.service} />
+        </div>
+      ) : activeTab === "resilience" ? (
+        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
+          <ResiliencePanel />
+        </div>
+      ) : (
+        <div style={{ padding: "20px 24px", overflowY: "auto", height: "calc(100vh - 54px)" }}>
+          <AuditTrailPanel incidentId={selectedIncident?.id} />
         </div>
       )}
     </div>
