@@ -14,6 +14,9 @@ from backend.app.api.topology import router as topology_router
 from backend.app.api.prediction import router as prediction_router
 from backend.app.api.grouping import router as grouping_router
 from backend.app.api.oncall import router as oncall_router
+from backend.app.api.canary import router as canary_router
+from backend.app.api.resilience import router as resilience_router
+from backend.app.api.audit import router as audit_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,6 +53,9 @@ app.include_router(topology_router, prefix=settings.API_V1_PREFIX)
 app.include_router(prediction_router, prefix=settings.API_V1_PREFIX)
 app.include_router(grouping_router, prefix=settings.API_V1_PREFIX)
 app.include_router(oncall_router, prefix=settings.API_V1_PREFIX)
+app.include_router(canary_router, prefix=settings.API_V1_PREFIX)
+app.include_router(resilience_router, prefix=settings.API_V1_PREFIX)
+app.include_router(audit_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health", tags=["system"])
 async def health_check():
