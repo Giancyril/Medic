@@ -8,6 +8,15 @@ import type {
   OnCallRosterStatus,
   PageEvent,
 } from "../types/day3";
+import type {
+  CanaryDeployment,
+  CanaryAnalysisReport,
+  ResilienceScorecard,
+  ChaosExperiment,
+  AuditEntry,
+  ComplianceReport,
+  IncidentReplayFrame,
+} from "../types/day4";
 
 const BASE = "http://localhost:8000/api/v1";
 
@@ -183,5 +192,44 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ reason }),
       }),
+  },
+  canary: {
+    list: () => request<{ deployments: CanaryDeployment[] }>("/canary/deployments"),
+    get: (id: string) => request<CanaryDeployment>(`/canary/deployments/${id}`),
+    evaluate: (id: string) =>
+      request<{ deployment: CanaryDeployment; report: CanaryAnalysisReport }>(
+        `/canary/deployments/${id}/evaluate`,
+        { method: "POST" }
+      ),
+    advance: (id: string) =>
+      request<{ deployment: CanaryDeployment; report: CanaryAnalysisReport }>(
+        `/canary/deployments/${id}/advance`,
+        { method: "POST" }
+      ),
+    promote: (id: string) =>
+      request<CanaryDeployment>(`/canary/deployments/${id}/promote`, { method: "POST" }),
+    rollback: (id: string, reason?: string) =>
+      request<CanaryDeployment>(`/canary/deployments/${id}/rollback`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      }),
+  },
+  resilience: {
+    getScorecard: () => request<ResilienceScorecard>("/resilience/scorecard"),
+    listExperiments: () => request<{ experiments: ChaosExperiment[] }>("/resilience/experiments"),
+    launch: (experimentId: string) =>
+      request<ChaosExperiment>(`/resilience/experiments/${experimentId}/launch`, { method: "POST" }),
+    stop: (experimentId: string) =>
+      request<ChaosExperiment>(`/resilience/experiments/${experimentId}/stop`, { method: "POST" }),
+  },
+  audit: {
+    getLedger: () =>
+      request<{ integrity_verified: boolean; count: number; ledger: AuditEntry[] }>("/audit/ledger"),
+    getCompliance: (incidentId: string) =>
+      request<ComplianceReport>(`/audit/compliance/${incidentId}`),
+    getReplay: (incidentId: string) =>
+      request<{ incident_id: string; frames_count: number; frames: IncidentReplayFrame[] }>(
+        `/audit/replay/${incidentId}`
+      ),
   },
 };
