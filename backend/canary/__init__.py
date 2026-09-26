@@ -9,6 +9,7 @@ from backend.canary.models import (
     CanaryDeployment,
 )
 from backend.canary.engine import CanaryAnalysisEngine, canary_analysis_engine
+from backend.canary.orchestrator import CanaryOrchestrator, canary_orchestrator
 
 __all__ = [
     "CanaryPhase",
@@ -18,4 +19,6 @@ __all__ = [
     "CanaryDeployment",
     "CanaryAnalysisEngine",
     "canary_analysis_engine",
+    "CanaryOrchestrator",
+    "canary_orchestrator",
 ]
