@@ -17,6 +17,9 @@ from backend.app.api.oncall import router as oncall_router
 from backend.app.api.canary import router as canary_router
 from backend.app.api.resilience import router as resilience_router
 from backend.app.api.audit import router as audit_router
+from backend.app.api.multicluster import router as multicluster_router
+from backend.app.api.finops import router as finops_router
+from backend.app.api.selfhealing import router as selfhealing_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,6 +59,9 @@ app.include_router(oncall_router, prefix=settings.API_V1_PREFIX)
 app.include_router(canary_router, prefix=settings.API_V1_PREFIX)
 app.include_router(resilience_router, prefix=settings.API_V1_PREFIX)
 app.include_router(audit_router, prefix=settings.API_V1_PREFIX)
+app.include_router(multicluster_router, prefix=settings.API_V1_PREFIX)
+app.include_router(finops_router, prefix=settings.API_V1_PREFIX)
+app.include_router(selfhealing_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health", tags=["system"])
 async def health_check():
