@@ -1,4 +1,13 @@
-﻿import type { Incident } from "../types/incident";
+﻿import type {
+  MultiClusterOverview,
+  ClusterRegion,
+  FinOpsSummary,
+  RemediationCostDelta,
+  SelfHealingPolicy,
+  ClosedLoopExecution,
+  GuardrailStatus,
+} from "../types/day5";
+import type { Incident } from "../types/incident";
 import type {
   TopologyGraph,
   BlastRadiusReport,
@@ -232,4 +241,63 @@ export const api = {
         `/audit/replay/${incidentId}`
       ),
   },
+  multicluster: {
+    getOverview: () => request<MultiClusterOverview>("/multicluster/overview"),
+    listClusters: () => request<{ clusters: ClusterRegion[] }>("/multicluster/clusters"),
+    drain: (clusterId: string, reason?: string) =>
+      request<{ status: string; cluster: ClusterRegion; overview: MultiClusterOverview }>(
+        `/multicluster/clusters/${clusterId}/drain`,
+        { method: "POST", body: JSON.stringify({ reason }) }
+      ),
+    restore: (clusterId: string, targetWeightPct = 35) =>
+      request<{ status: string; cluster: ClusterRegion; overview: MultiClusterOverview }>(
+        `/multicluster/clusters/${clusterId}/restore`,
+        { method: "POST", body: JSON.stringify({ target_weight_pct: targetWeightPct }) }
+      ),
+    shift: (sourceId: string, targetId: string, shiftPct: number) =>
+      request<MultiClusterOverview>("/multicluster/shift", {
+        method: "POST",
+        body: JSON.stringify({ source_id: sourceId, target_id: targetId, shift_pct: shiftPct }),
+      }),
+  },
+  finops: {
+    listSummaries: () => request<{ summaries: FinOpsSummary[] }>("/finops/summaries"),
+    getImpact: (incidentId: string) => request<FinOpsSummary>(`/finops/impact/${incidentId}`),
+    calculate: (service: string, durationMinutes: number, errorRatePct: number, incidentId?: string) =>
+      request<FinOpsSummary>("/finops/calculate", {
+        method: "POST",
+        body: JSON.stringify({
+          service,
+          duration_minutes: durationMinutes,
+          error_rate_pct: errorRatePct,
+          incident_id: incidentId,
+        }),
+      }),
+    addRemediationCost: (incidentId: string, actionType: string, resources: string, hourlyUsd: number) =>
+      request<RemediationCostDelta>("/finops/remediation-cost", {
+        method: "POST",
+        body: JSON.stringify({
+          incident_id: incidentId,
+          action_type: actionType,
+          resources,
+          hourly_usd: hourlyUsd,
+        }),
+      }),
+  },
+  selfhealing: {
+    listPolicies: () => request<{ policies: SelfHealingPolicy[] }>("/selfhealing/policies"),
+    togglePolicy: (policyId: string, enabled: boolean) =>
+      request<SelfHealingPolicy>(`/selfhealing/policies/${policyId}/toggle`, {
+        method: "POST",
+        body: JSON.stringify({ enabled }),
+      }),
+    executePolicy: (policyId: string, incidentId: string, initialMetrics?: Record<string, number>) =>
+      request<ClosedLoopExecution>(`/selfhealing/policies/${policyId}/execute`, {
+        method: "POST",
+        body: JSON.stringify({ incident_id: incidentId, initial_metrics: initialMetrics }),
+      }),
+    listExecutions: () => request<{ executions: ClosedLoopExecution[] }>("/selfhealing/executions"),
+    getGuardrails: () => request<GuardrailStatus>("/selfhealing/guardrails"),
+  },
 };
+
